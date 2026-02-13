@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <title>لوحة معرض السيارات</title>
+
+  <!-- PWA basics -->
+  <meta name="theme-color" content="#0a0e14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MAA Dashboard" />
+
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./assets/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./assets/icons/icon-192.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link rel="stylesheet" href="./assets/css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">MAA</div>
+        <div class="titles">
+          <div class="title">لوحة معرض السيارات</div>
+          <div class="subtitle">نسخة ويب بسيطة — جاهزة للرفع على GitHub Pages</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn ghost" id="btnInstall" type="button">تثبيت</button>
+        <button class="btn" id="btnAddCar" type="button">+ إضافة سيارة</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="grid">
+        <div class="card">
+          <div class="card-h">
+            <div class="card-t">إحصائيات سريعة</div>
+            <div class="pill" id="pillDate">اليوم</div>
+          </div>
+          <div class="stats">
+            <div class="stat">
+              <div class="k">السيارات</div>
+              <div class="v" id="statCars">0</div>
+            </div>
+            <div class="stat">
+              <div class="k">المبيعات</div>
+              <div class="v" id="statSales">0</div>
+            </div>
+            <div class="stat">
+              <div class="k">المصاريف</div>
+              <div class="v" id="statCosts">0</div>
+            </div>
+            <div class="stat">
+              <div class="k">الربح التقريبي</div>
+              <div class="v" id="statProfit">0</div>
+            </div>
+          </div>
+
+          <div class="chart-wrap">
+            <canvas id="ringChart" width="360" height="360" aria-label="إحصائية دائرية" role="img"></canvas>
+            <div class="legend" id="legend"></div>
+          </div>
+
+          <div class="hint">
+            ملاحظة: هذا موقع Static (بدون قاعدة بيانات). يتم حفظ البيانات على جهازك داخل المتصفح (LocalStorage).
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h">
+            <div class="card-t">السيارات</div>
+            <div class="card-actions">
+              <input class="input" id="search" placeholder="بحث: موديل / رقم شاصي / لون..." />
+              <select class="select" id="filterStatus">
+                <option value="all">الكل</option>
+                <option value="available">متوفر</option>
+                <option value="sold">مباع</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table" aria-label="جدول السيارات">
+              <thead>
+                <tr>
+                  <th>الحالة</th>
+                  <th>الموديل</th>
+                  <th>السنة</th>
+                  <th>اللون</th>
+                  <th>الشاصي</th>
+                  <th class="num">شراء</th>
+                  <th class="num">مصروف</th>
+                  <th class="num">بيع</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="carsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>© <span id="year"></span> — MAA Motor</div>
+      <div class="muted">PWA + GitHub Pages</div>
+    </footer>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="إضافة سيارة">
+      <div class="modal-h">
+        <div class="modal-t" id="modalTitle">إضافة سيارة</div>
+        <button class="icon-btn" id="modalClose" type="button" aria-label="إغلاق">✕</button>
+      </div>
+
+      <form id="carForm" class="form">
+        <div class="row">
+          <label class="field">
+            <span>الحالة</span>
+            <select id="status" class="select" required>
+              <option value="available">متوفر</option>
+              <option value="sold">مباع</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>السنة</span>
+            <input id="yearInput" class="input" inputmode="numeric" placeholder="مثال: 2024" required />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>الموديل</span>
+          <input id="model" class="input" placeholder="مثال: Patrol / G63 / Defender..." required />
+        </label>
+
+        <div class="row">
+          <label class="field">
+            <span>اللون</span>
+            <input id="color" class="input" placeholder="أبيض / أسود / رمادي..." />
+          </label>
+
+          <label class="field">
+            <span>رقم الشاصي (VIN)</span>
+            <input id="vin" class="input" placeholder="17 حرف/رقم (اختياري)" />
+          </label>
+        </div>
+
+        <div class="row">
+          <label class="field">
+            <span>سعر الشراء</span>
+            <input id="buyPrice" class="input" inputmode="decimal" placeholder="0" />
+          </label>
+
+          <label class="field">
+            <span>مصاريف</span>
+            <input id="costs" class="input" inputmode="decimal" placeholder="0" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>سعر البيع (إذا مباع)</span>
+          <input id="sellPrice" class="input" inputmode="decimal" placeholder="0" />
+        </label>
+
+        <label class="field">
+          <span>ملاحظات</span>
+          <textarea id="notes" class="textarea" placeholder="أي ملاحظات..."></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button class="btn ghost" id="btnCancel" type="button">إلغاء</button>
+          <button class="btn" type="submit">حفظ</button>
+        </div>
+
+        <input type="hidden" id="editId" value="" />
+      </form>
+    </div>
+  </div>
+
+  <script src="./assets/js/app.js"></script>
+</body>
+</html>
